@@ -1,69 +1,44 @@
-import * as React from 'react';
-import ChatRoomItem from '../components/ChatRoomItem';
-import {View, Text, StyleSheet , Image, FlatList } from 'react-native';
+import React, { useState, useEffect } from "react";
 
-import chatRoomData from '../assets/dummy-data/ChatRooms';
-
-// const chatRoom1 = chatRoomData[0];
-// const chatRoom2 = chatRoomData[1];
+import { View, StyleSheet, FlatList } from "react-native";
+import { Auth, DataStore } from "aws-amplify";
+import { ChatRoom, ChatRoomUser } from "../src/models";
+import ChatRoomItem from "../components/ChatRoomItem";
 
 export default function TabOneScreen() {
+  const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
+
+  useEffect(() => {
+    const fetchChatRooms = async () => {
+      const userData = await Auth.currentAuthenticatedUser();
+
+      const chatRooms = (await DataStore.query(ChatRoomUser))
+        .filter(
+          (chatRoomUser) => chatRoomUser.user.id === userData.attributes.sub
+        )
+        .map((chatRoomUser) => chatRoomUser.chatroom);
+
+      setChatRooms(chatRooms);
+    };
+    fetchChatRooms();
+  }, []);
+
+
+
   return (
-<View style={styles.page}>
-
-
-{/* For horizontal list like instagram story 
-in this the page goes down and top but 
-the horizontal page list not go*/}
-{/* { <FlatList
-     data ={chatRoomData}
-     renderItem={({item})=> <ChatRoomItem chatRoom={item}/>}
-     showsVerticalScrollIndicator ={false}
-     horizontal
-    /> } */}
-
-
-{/* here we the horizontal page 
-scroll that time vertical list goes top and down */}
-
-{/* <FlatList
-     data ={chatRoomData}
-     renderItem={({item})=> <ChatRoomItem chatRoom={item}/>}
-     showsVerticalScrollIndicator ={false}
-     ListHeaderComponent={() => <FlatList
-      data ={chatRoomData}
-      renderItem={({item})=> <ChatRoomItem chatRoom={item}/>}
-      showsVerticalScrollIndicator ={false}
-      horizontal
-     />}
-    /> */}
-
-{/* for text horizontal way and changeable */}
-{/* <FlatList
-     data ={chatRoomData}
-     renderItem={({item})=> <ChatRoomItem chatRoom={item}/>}
-     showsVerticalScrollIndicator ={false}
-     ListHeaderComponent={() => <Text>Messeges</Text>}
-    /> */}
-
-<FlatList
-     data ={chatRoomData}
-     renderItem={({item})=> <ChatRoomItem chatRoom={item}/>}
-     showsVerticalScrollIndicator ={false}
-    />
-
-  </View>
-
+    <View style={styles.page}>
+      <FlatList
+        data={chatRooms}
+        renderItem={({ item }) => <ChatRoomItem chatRoom={item} />}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-
-  page:{
-
-    backgroundColor:'white',
-    flex:1,
-
+  page: {
+    backgroundColor: "white",
+    flex: 1,
   },
-})
-
+});
